@@ -33,17 +33,17 @@ designBank()
 noRobot = 0
 noRobot = random.randint(1000, 9999)
 print("\nProve que não és um robô e informe o código de 4 dígitos\npara entrar no PyBank")
-noRobotInput = int(input(f"\n{noRobot} -> "))
+noRobotInput = int(input("\n{} -> ".format(noRobot)))
 if noRobotInput == noRobot:
     commands = "."
     while(commands!="/sair"):
-
-        commands = input("Informe algum comando aqui -> ")
+        print("\n"*100)
         designBank()
-        print("/criarConta")
+        print("\n/abrirconta")
         print("/entrar")
         print("/sair")
-        commands
+        commands = input("\n\nInforme algum comando aqui -> ")
+    print("\n\nVocê optou por sair.\n Até mais! :)")
 else:
     print("\n\nOps...\n  Você escreveu algo errado aí e não pudemos prosseguir. Tente novamente mais tarde. :)\n\n"+color.YELLOW+"PyBank"+color.END)
     exit()
