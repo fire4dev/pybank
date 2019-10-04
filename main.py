@@ -1,5 +1,6 @@
 # @@@@@ IMPORTS @@@@@@
 import random
+import psycopg2
 
 # @@@@@ CLASS @@@@@
 class color:
