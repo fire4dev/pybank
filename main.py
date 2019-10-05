@@ -1,7 +1,7 @@
 # @@@@@ IMPORTS @@@@@@
 import random
-import psycopg2
 import bd
+import time
 
 # @@@@@ CLASS @@@@@
 class color:
@@ -37,9 +37,38 @@ def abrirConta():
     print("\n          @@@@@   Abrir Conta   @@@@@\n\n")
     concluido = 0
     while concluido == 0:
-        usuarioUP = input("CPF ->  ")
-        senhaUP = input("Senha ->  ")
+        fullname = input("Nome completo ->  ")
+        cpf = input("CPF ->  ")
+        # valida o cpf
+        if(len(cpf)<11 or len(cpf)>11):
+            print("\n\nErro: o cpf deve ter 11 digitos e você digitou {}\n".format(len(cpf)))
+            continue
+        email = input("E-mail ->  ")
+        verificaEmail = (email.find('@'),email.find('.com'))
+        if verificaEmail[0] == -1:
+            print("\n\nErro: email inválido [missing: '@']\n")
+            continue
+        if verificaEmail[1] == -1:
+            print("\n\nErro: email inválido [missing: '.com/.com.br/...']\n")
+            continue
+        dataNasc = input("Data de nasc. [dd/mm/yyyy] ->  ")
+        # valida a data de nascimento
+        if(len(dataNasc)<10 or len(dataNasc)>10):
+            print("\n\nErro: data de nascimento inválida\n")
+            continue
+        passwd = input("Senha ->  ")
+        if(len(passwd)<6):
+            print("\n\nErro: a senha deve conter pelo menos 6 digitos\n")
+            continue
 
+        sql = "INSERT INTO usuarios(fullname,cpf,email,dataNasc,passwd) VALUES(%s,%s,%s,%s,%s)"
+        values = (fullname, cpf, email, dataNasc, passwd)
+        bd.mysqli.execute(sql,values)
+        if(bd.conexao.commit()):
+            print("\n\n Sr(a). {}\n  Seu cadastro foi concluído, agora podes acessar sua conta com /entrar".format(fullname))
+            time.sleep(2.5)
+            concluido = 1
+            bd.mysqli_close
 
 def entrar():
     clear()
@@ -47,8 +76,13 @@ def entrar():
     print("\n          @@@@@   Entrar em sua conta   @@@@@\n\n")
     concluido = 0
     while concluido == 0:
-        usuarioIN = input("CPF ->  ")
-        senhaIN = input("Senha ->  ")
+        cpf = input("CPF ->  ")
+        passwd = input("Senha ->  ")
+
+
+
+
+
 
 
 # @@@@@  MAIN  @@@@@

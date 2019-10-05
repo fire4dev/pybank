@@ -1,4 +1,8 @@
 {
     "python.linting.pylintEnabled": true,
-    "python.linting.enabled": true
+    "python.linting.enabled": true,
+    "python.linting.mypyEnabled": false,
+    "terminal.integrated.env.linux": {
+        "LESSCHARSET": "utf-8"
+    }
 }

@@ -1,0 +1,10 @@
+CREATE DATABASE pybank;
+
+CREATE TABLE usuarios(
+	userID int PRIMARY KEY AUTO_INCREMENT,
+    fullname varchar(150) not null, 
+    cpf int(7) not null,
+    email varchar(150) not null,
+    dataNasc date not null,
+    passwd varchar(99) not null
+);

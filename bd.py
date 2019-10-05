@@ -1,16 +1,16 @@
 # @@@@@ IMPORTS @@@@@@
-import psycopg2
+import mysql.connector
+import socket
 
-con = psycopg2.connect(
-    host = "localhost",
-    database = "pybank",
-    user = "postgres",
-    password = "post"
+conexao = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="",
+    database="pybank"
 )
 
 # create cursor
-cur = con.cursor()
-
+mysqli = conexao.cursor()
 
 # close connection
-con.close()
+mysqli_close = conexao.close()
