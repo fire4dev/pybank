@@ -61,14 +61,24 @@ def abrirConta():
             print("\n\nErro: a senha deve conter pelo menos 6 digitos\n")
             continue
 
-        sql = "INSERT INTO usuarios(fullname,cpf,email,dataNasc,passwd) VALUES(%s,%s,%s,%s,%s)"
-        values = (fullname, cpf, email, dataNasc, passwd)
-        bd.mysqli.execute(sql,values)
-        if(bd.conexao.commit()):
+        #verificar se existe
+        verifyCpf = bd.cursor.execute("SELECT cpf FROM usuarios WHERE cpf=%s;",(tuple(cpf,)))
+        if(verifyCpf==0):
+            sql = "INSERT INTO usuarios(fullname,cpf,email,datanasc,passwd) VALUES(%s,%s,%s,%s,%s)"
+            values = (fullname, cpf, email, dataNasc, passwd)
+            bd.cursor.execute(sql,values)
+            bd.connection.commit()
+            bd.cursor.close()
             print("\n\n Sr(a). {}\n  Seu cadastro foi concluído, agora podes acessar sua conta com /entrar".format(fullname))
             time.sleep(2.5)
             concluido = 1
-            bd.mysqli_close
+            bd.connection.close()
+        else:
+            print("\n\nSr(a). {}, o CPF digitado ({}) já foi usado aqui no PyBank".format(fullname,cpf))
+            continue
+
+            
+            
 
 def entrar():
     clear()
