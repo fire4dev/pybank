@@ -11,9 +11,9 @@ CREATE TABLE usuarios(
 
 CREATE TABLE saldos(
     saldoID serial PRIMARY KEY,
-    userID int REFERENCES usuarios(userID),
+    userID integer REFERENCES usuarios(userID),
     cpf varchar(20) not null,
-    saldo bigint
+    saldo bigint not null
 );
 
 CREATE TABLE depositos(
@@ -26,8 +26,18 @@ CREATE TABLE depositos(
 
 CREATE TABLE transferencias(
     transfID serial PRIMARY KEY,
-    userID int REFERENCES usuarios(userID),
+    userID integer REFERENCES usuarios(userID),
     cpf varchar(20) not null,
     cpfTransf varchar(20) not null,
     valor bigint not null
+);
+
+CREATE TABLE pagamentos(
+    pagID serial PRIMARY KEY,
+    userID integer REFERENCES usuarios(userID),
+    nomePag varchar(150) not null,
+    cpf varchar(20) not null,
+    codBarras varchar(30) not null,
+    valor bigint not null,
+    situacao varchar(20) not null
 );

@@ -133,7 +133,22 @@ def entrar():
                     exitBank(commands)
                     if commands == "/voltar":
                         continue
-
+                if commands == "/pagar":
+                    clear()
+                    designBank()
+                    pagar(cpf)
+                    commands = input("\n\nInforme algum comando aqui -> ")
+                    exitBank(commands)
+                    if commands == "/voltar":
+                        continue
+                if commands == "/pagamentos":
+                    clear()
+                    designBank()
+                    pagamentos(cpf)
+                    commands = input("\n\nInforme algum comando aqui -> ")
+                    exitBank(commands)
+                    if commands == "/voltar":
+                        continue
                 
         else:
             print("\n\n Não existe nenhum cadastro com o CPF ou Senha especificado, por favor\nverifique se você digitou certo ou abra sua\nconta com o comando /abrirconta")
@@ -149,6 +164,7 @@ def userLogado(cpfDigitado):
     print("/meusaldo")
     print("/transferir")
     print("/pagar")
+    print("/pagamentos")
     print("\n/sairconta")
     print("/sair")
 
@@ -178,32 +194,101 @@ def transferir(cpfDigitado):
         saldo = bd.cursor.fetchone()[0]
         if saldo>0:
             cpfTransf = input("\nInforme o CPF do usuário ->  ")
-            bd.cursor.execute("SELECT cpf FROM usuarios WHERE cpf=%s",(cpfTransf,))
-            rows = bd.cursor.rowcount
-            if rows>0:
-                value = float(input("Valor ->  R$"))
-                if value <= saldo:
-                    bd.cursor.execute("INSERT INTO transferencias(cpf,cpfTransf,valor) VALUES(%s,%s,%s)", (cpfDigitado,cpfTransf,value))
-                    bd.connection.commit()
-                    bd.cursor.execute("UPDATE saldos SET saldo=saldo+%s WHERE cpf=%s",(value,cpfTransf))
-                    bd.cursor.execute("UPDATE saldos SET saldo=saldo-%s WHERE cpf=%s",(value,cpfDigitado))
-                    bd.connection.commit()
-                    print("\n Transferência efetuada com sucesso!")
-                    print("\n/voltar")
-                    time.sleep(2.5)
-                    concluido=1
+            if cpfTransf!=cpfDigitado:
+                bd.cursor.execute("SELECT cpf FROM usuarios WHERE cpf=%s",(cpfTransf,))
+                rows = bd.cursor.rowcount
+                if rows>0:
+                    value = float(input("Valor ->  R$"))
+                    if value <= saldo:
+                        bd.cursor.execute("INSERT INTO transferencias(cpf,cpfTransf,valor) VALUES(%s,%s,%s)", (cpfDigitado,cpfTransf,value))
+                        bd.connection.commit()
+                        bd.cursor.execute("UPDATE saldos SET saldo=saldo+%s WHERE cpf=%s",(value,cpfTransf))
+                        bd.cursor.execute("UPDATE saldos SET saldo=saldo-%s WHERE cpf=%s",(value,cpfDigitado))
+                        bd.connection.commit()
+                        print("\n Transferência efetuada com sucesso!")
+                        print("\n/voltar")
+                        time.sleep(2.5)
+                        concluido=1
+                    else:
+                        print("\nSaldo insuficiente...")
+                        time.sleep(3)
+                        concluido=1
                 else:
-                    print("\nSaldo insuficiente...")
-                    time.sleep(2.5)
-                    continue
+                    print("\nO usuário informado não existe")
+                    time.sleep(3)
+                    concluido=1
             else:
-                print("\nO usuário informado não existe")
-                time.sleep(2.5)
+                print("\n Oops...\nVocê não pode transferir para você mesmo! :)")
                 continue
         else:
             print("\n Você ainda não tem saldo, deposite em sua conta\nno menu inicial com /depositar")
             print("\n/voltar")
     
+
+def pagar(cpfDigitado):
+    concluido = 0
+    situacao = ""
+    while concluido == 0:
+        bd.cursor.execute("SELECT saldo FROM saldos WHERE cpf=%s",(cpfDigitado,))
+        saldo = bd.cursor.fetchone()[0]
+        if saldo>0:
+            nomePag = input("\nNome do pagamento ->  ")
+            codBarras = input("Código de barras ->  ")
+            value = float(input("Valor ->  R$"))           
+            if value <= saldo:
+                situacao = "pendente"
+                bd.cursor.execute("INSERT INTO pagamentos(nomePag,cpf,codBarras,valor,situacao) VALUES(%s,%s,%s,%s,%s)", (nomePag,cpfDigitado,codBarras,value,situacao))
+                bd.connection.commit()
+                load = 0
+                seg = 59
+                mins = 1
+                while load<120:
+                    clear()
+                    designBank()
+                    print("\n Aguarde...\nSeu pagamento está sendo processado e será atualizado em alguns minutos.")
+                    if seg<10:
+                        print(" {}:0{}".format(mins,seg))
+                    else:
+                        print(" {}:{}".format(mins,seg))
+                    time.sleep(1)                   
+                    if seg == 0:
+                        mins-=1
+                        seg=59
+                    seg-=1
+                    if (mins==0) and (seg==0):
+                        break
+                    load+=1
+                    
+                situacao = "pago"
+                bd.cursor.execute("UPDATE saldos SET saldo=saldo-%s WHERE cpf=%s",(value,cpfDigitado))
+                bd.cursor.execute("UPDATE pagamentos SET situacao=%s WHERE cpf=%s",(situacao,cpfDigitado))
+                bd.connection.commit()
+                print("\n Pagamento realizado com sucesso!")
+                print("\n/voltar")
+                time.sleep(3)
+                concluido=1
+            else:
+                print("\nSaldo insuficiente...")
+                time.sleep(2.5)
+                continue
+        else:
+            print("\n Você ainda não tem saldo, deposite em sua conta\nno menu inicial com /depositar")
+            print("\n/voltar")
+
+def pagamentos(cpfDigitado):
+    bd.cursor.execute("SELECT * FROM pagamentos WHERE cpf=%s",(cpfDigitado,))
+    rows = bd.cursor.fetchall()
+    numRows = bd.cursor.rowcount
+    if numRows>0:
+        print("\n    Histórico de Pagamentos:\n")
+        cont=0
+        for dados in rows:
+            cont+=1
+            print("{} ->   NOME: {}  CÓD.BARRAS:{}  VALOR: R${}  SITUAÇÃO: {}".format(cont,dados[2],dados[4],dados[5],dados[6]))
+        print("\n/voltar")
+    else:
+        print("\nNenhum pagamento foi efetuado")
+        print("\n/voltar")
 
 def exitBank(commandWrited):
     if commandWrited == "/sair":
