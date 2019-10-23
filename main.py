@@ -36,6 +36,7 @@ def abrirConta():
     designBank()
     print("\n          @@@@@   Abrir Conta   @@@@@\n\n")
     concluido = 0
+    logado = 0
     while concluido == 0:
         fullname = input("Nome completo ->  ")
         cpf = input("CPF ->  ")
@@ -62,19 +63,18 @@ def abrirConta():
             continue
 
         #verificar se existe
-        verifyCpf = bd.cursor.execute("SELECT cpf FROM usuarios WHERE cpf=%s;",(tuple(cpf,)))
-        if(verifyCpf==0):
-            sql = "INSERT INTO usuarios(fullname,cpf,email,datanasc,passwd) VALUES(%s,%s,%s,%s,%s)"
-            values = (fullname, cpf, email, dataNasc, passwd)
-            bd.cursor.execute(sql,values)
+        bd.cursor.execute("SELECT cpf FROM usuarios WHERE cpf=%s;",(cpf,))
+        rowCount = bd.cursor.rowcount
+        if(rowCount==0):
+            moneyInit = 0
+            bd.cursor.execute("INSERT INTO usuarios(fullname,cpf,email,datanasc,passwd) VALUES(%s,%s,%s,%s,%s)",(fullname, cpf, email, dataNasc, passwd))
+            bd.cursor.execute("INSERT INTO saldos(cpf,saldo) VALUES(%s,%s)",(cpf,moneyInit))
             bd.connection.commit()
-            bd.cursor.close()
             print("\n\n Sr(a). {}\n  Seu cadastro foi concluído, agora podes acessar sua conta com /entrar".format(fullname))
             time.sleep(2.5)
             concluido = 1
-            bd.connection.close()
         else:
-            print("\n\nSr(a). {}, o CPF digitado ({}) já foi usado aqui no PyBank".format(fullname,cpf))
+            print("\n\nSr(a). {}, o CPF digitado ({}) já foi usado aqui no PyBank.\n\n".format(fullname,cpf))
             continue
 
             
@@ -87,11 +87,164 @@ def entrar():
     concluido = 0
     while concluido == 0:
         cpf = input("CPF ->  ")
+        if(len(cpf)<11 or len(cpf)>11):
+            print("\n\nErro: o cpf deve ter 11 digitos e você digitou {}\n".format(len(cpf)))
+            continue
         passwd = input("Senha ->  ")
+        # @@ pegar dados do banco
+        bd.cursor.execute("SELECT cpf, passwd FROM usuarios WHERE cpf=%s and passwd=%s;",(cpf,passwd))
+        rowCount = bd.cursor.rowcount
+        # @@ verificar se o login está certo
+        if (rowCount == 1):
+            concluido = 1
+            logado = 1
+            while logado==1:
+                clear()
+                designBank()
+                userLogado(cpf)
+                commands = input("\n\nInforme algum comando aqui -> ")
+                exitBank(commands)
+                # @@ verificações
+                if commands == "/sairconta":
+                    print("\nVocê foi desconectado!")
+                    time.sleep(2.5)
+                    logado = 0
+                if commands == "/minhaconta":
+                    clear()
+                    designBank()
+                    myacc(cpf)
+                    commands = input("\n\nInforme algum comando aqui -> ")
+                    exitBank(commands)
+                    if commands == "/voltar":
+                        continue
+                if commands == "/meusaldo":
+                    clear()
+                    designBank()
+                    myMoney(cpf)
+                    commands = input("\n\nInforme algum comando aqui -> ")
+                    exitBank(commands)
+                    if commands == "/voltar":
+                        continue
+                if commands == "/transferir":
+                    clear()
+                    designBank()
+                    transferir(cpf)
+                    commands = input("\n\nInforme algum comando aqui -> ")
+                    exitBank(commands)
+                    if commands == "/voltar":
+                        continue
 
+                
+        else:
+            print("\n\n Não existe nenhum cadastro com o CPF ou Senha especificado, por favor\nverifique se você digitou certo ou abra sua\nconta com o comando /abrirconta")
+            time.sleep(2.5)
+            concluido = 1
 
+def userLogado(cpfDigitado):
+    # @@ pegar o nome no bd
+    bd.cursor.execute("SELECT fullname FROM usuarios WHERE cpf=%s;",(cpfDigitado,))
+    nome = bd.cursor.fetchone()[0]
+    print("\nBem vindo ao PyBank, {}!".format(nome))
+    print("\n/minhaconta")
+    print("/meusaldo")
+    print("/transferir")
+    print("/pagar")
+    print("\n/sairconta")
+    print("/sair")
 
+def myacc(cpfDigitado):
+    bd.cursor.execute("SELECT * FROM usuarios WHERE cpf=%s",(cpfDigitado,))
+    dados = bd.cursor.fetchall()
+    print("\nSeus dados:\n")
+    for rows in dados:
+        print("Nome ->  {}".format(rows[1]))
+        print("E-mail ->  {}".format(rows[3]))
+        print("CPF ->  {}".format(rows[2]))
+        print("Senha ->  {}".format(rows[5]))
+        print("Data de nascimento [yyyy-mm-dd] ->  {}".format(rows[4]))
+    print("\n/voltar")
 
+def myMoney(cpfDigitado):
+    bd.cursor.execute("SELECT saldo FROM saldos WHERE cpf=%s",(cpfDigitado,))
+    dados = bd.cursor.fetchone()
+    print("\nSeu saldo:")
+    print("R${:.2f}".format(dados[0]))
+    print("\n/voltar")
+
+def transferir(cpfDigitado):
+    concluido = 0
+    while concluido == 0:
+        bd.cursor.execute("SELECT saldo FROM saldos WHERE cpf=%s",(cpfDigitado,))
+        saldo = bd.cursor.fetchone()[0]
+        if saldo>0:
+            cpfTransf = input("\nInforme o CPF do usuário ->  ")
+            bd.cursor.execute("SELECT cpf FROM usuarios WHERE cpf=%s",(cpfTransf,))
+            rows = bd.cursor.rowcount
+            if rows>0:
+                value = float(input("Valor ->  R$"))
+                if value <= saldo:
+                    bd.cursor.execute("INSERT INTO transferencias(cpf,cpfTransf,valor) VALUES(%s,%s,%s)", (cpfDigitado,cpfTransf,value))
+                    bd.connection.commit()
+                    bd.cursor.execute("UPDATE saldos SET saldo=saldo+%s WHERE cpf=%s",(value,cpfTransf))
+                    bd.cursor.execute("UPDATE saldos SET saldo=saldo-%s WHERE cpf=%s",(value,cpfDigitado))
+                    bd.connection.commit()
+                    print("\n Transferência efetuada com sucesso!")
+                    print("\n/voltar")
+                    time.sleep(2.5)
+                    concluido=1
+                else:
+                    print("\nSaldo insuficiente...")
+                    time.sleep(2.5)
+                    continue
+            else:
+                print("\nO usuário informado não existe")
+                time.sleep(2.5)
+                continue
+        else:
+            print("\n Você ainda não tem saldo, deposite em sua conta\nno menu inicial com /depositar")
+            print("\n/voltar")
+    
+
+def exitBank(commandWrited):
+    if commandWrited == "/sair":
+        print("\n\nVocê optou por sair.\n Até mais! :)")
+        exit()
+
+def deposit():
+    concluido=0
+    while concluido==0:
+        clear()
+        designBank()
+        name = input("\nInforme seu nome ->  ")
+        # @@ cpf do depositante
+        cpf = input("Informe seu CPF ->  ")
+        if(len(cpf)<11 or len(cpf)>11):
+            print("\n\nErro: o cpf deve ter 11 digitos e você digitou {}\n".format(len(cpf)))
+            continue
+            
+        # @@ cpf para quem quer depositar        
+        cpfDeposit = input("CPF da pessoa para quem quer depositar ->  ")
+        if(len(cpf)<11 or len(cpf)>11):
+            print("\n\nErro: o cpf deve ter 11 digitos e você digitou {}\n".format(len(cpf)))
+            continue
+
+        # @@ verificar se o usuario existe
+        bd.cursor.execute("SELECT cpf FROM usuarios WHERE cpf=%s",(cpfDeposit,))
+        rows = bd.cursor.rowcount
+        if rows > 0:
+            value = float(input("Valor ->  R$"))
+            bd.cursor.execute("INSERT INTO depositos(nome,cpf,cpfDeposit,valor) VALUES(%s,%s,%s,%s)", (name,cpf,cpfDeposit,value))
+            bd.connection.commit()
+            bd.cursor.execute("UPDATE saldos SET saldo=saldo+%s WHERE cpf=%s",(value,cpfDeposit))
+            bd.connection.commit()
+            print("\n Depósito efetuado com sucesso!")
+            time.sleep(2.5)
+            concluido=1
+        else:
+            print("\nO usuário informado não existe")
+            time.sleep(2.5)
+            continue
+    
 
 
 
@@ -108,12 +261,15 @@ if noRobotInput == noRobot:
         designBank()
         print("\n/abrirconta")
         print("/entrar")
+        print("/depositar")
         print("/sair")
         commands = input("\n\nInforme algum comando aqui -> ")
         if commands=="/abrirconta":
             abrirConta()
         if commands=="/entrar":
             entrar()
+        if commands=="/depositar":
+            deposit()
 
     print("\n\nVocê optou por sair.\n Até mais! :)")
 else:

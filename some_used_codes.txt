@@ -3,8 +3,31 @@ CREATE DATABASE pybank;
 CREATE TABLE usuarios(
 	userID serial PRIMARY KEY,
     fullname varchar(150) not null, 
-    cpf bigint not null,
+    cpf varchar(20) not null,
     email varchar(150) not null,
     dataNasc date not null,
     passwd varchar(99) not null
+);
+
+CREATE TABLE saldos(
+    saldoID serial PRIMARY KEY,
+    userID int REFERENCES usuarios(userID),
+    cpf varchar(20) not null,
+    saldo bigint
+);
+
+CREATE TABLE depositos(
+    depID serial PRIMARY KEY,
+    nome varchar(150) not null,
+    cpf varchar(20) not null,
+    cpfDeposit varchar(20) not null,
+    valor bigint not null
+);
+
+CREATE TABLE transferencias(
+    transfID serial PRIMARY KEY,
+    userID int REFERENCES usuarios(userID),
+    cpf varchar(20) not null,
+    cpfTransf varchar(20) not null,
+    valor bigint not null
 );
