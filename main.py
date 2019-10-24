@@ -75,6 +75,7 @@ def abrirConta():
             concluido = 1
         else:
             print("\n\nSr(a). {}, o CPF digitado ({}) já foi usado aqui no PyBank.\n\n".format(fullname,cpf))
+            time.sleep(2.5)
             continue
 
             
@@ -223,6 +224,11 @@ def transferir(cpfDigitado):
         else:
             print("\n Você ainda não tem saldo, deposite em sua conta\nno menu inicial com /depositar")
             print("\n/voltar")
+            commands = input("\n\nInforme algum comando aqui -> ")
+            exitBank(commands)
+            if commands == "/voltar":
+                exit()
+            
     
 
 def pagar(cpfDigitado):
@@ -274,6 +280,10 @@ def pagar(cpfDigitado):
         else:
             print("\n Você ainda não tem saldo, deposite em sua conta\nno menu inicial com /depositar")
             print("\n/voltar")
+            commands = input("\n\nInforme algum comando aqui -> ")
+            exitBank(commands)
+            if commands == "/voltar":
+                exit()
 
 def pagamentos(cpfDigitado):
     bd.cursor.execute("SELECT * FROM pagamentos WHERE cpf=%s",(cpfDigitado,))
