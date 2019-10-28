@@ -2,6 +2,7 @@
 import random
 import bd
 import time
+from datetime import datetime
 
 # @@@@@ CLASS @@@@@
 class color:
@@ -192,6 +193,7 @@ def transferir(cpfDigitado):
     while concluido == 0:
         bd.cursor.execute("SELECT saldo FROM saldos WHERE cpf=%s",(cpfDigitado,))
         saldo = bd.cursor.fetchone()[0]
+        dateNow = ""
         if saldo>0:
             cpfTransf = input("\nInforme o CPF do usuário ->  ")
             if cpfTransf!=cpfDigitado:
@@ -200,7 +202,11 @@ def transferir(cpfDigitado):
                 if rows>0:
                     value = float(input("Valor ->  R$"))
                     if value <= saldo:
-                        bd.cursor.execute("INSERT INTO transferencias(cpf,cpfTransf,valor) VALUES(%s,%s,%s)", (cpfDigitado,cpfTransf,value))
+                        dateNow = datetime.today().strftime('%Y-%m-%d')
+                        # @@ pegando a foreign key e adicionando em outra tabela
+                        bd.cursor.execute("SELECT userID FROM usuarios WHERE cpf=%s",(cpfDigitado,))
+                        userID = bd.cursor.fetchall()[0]
+                        bd.cursor.execute("INSERT INTO transferencias(userID,cpf,cpfTransf,valor,dataTransf) VALUES(%s,%s,%s,%s,%s)", (userID,cpfDigitado,cpfTransf,value,dateNow))
                         bd.connection.commit()
                         bd.cursor.execute("UPDATE saldos SET saldo=saldo+%s WHERE cpf=%s",(value,cpfTransf))
                         bd.cursor.execute("UPDATE saldos SET saldo=saldo-%s WHERE cpf=%s",(value,cpfDigitado))
@@ -228,16 +234,21 @@ def transferir(cpfDigitado):
 def pagar(cpfDigitado):
     concluido = 0
     situacao = ""
+    dateNow = ""
     while concluido == 0:
         bd.cursor.execute("SELECT saldo FROM saldos WHERE cpf=%s",(cpfDigitado,))
         saldo = bd.cursor.fetchone()[0]
         if saldo>0:
             nomePag = input("\nNome do pagamento ->  ")
-            codBarras = input("Código de barras ->  ")
+            codBarras = int(input("Código de barras ->  "))
             value = float(input("Valor ->  R$"))           
             if value <= saldo:
                 situacao = "pendente"
-                bd.cursor.execute("INSERT INTO pagamentos(nomePag,cpf,codBarras,valor,situacao) VALUES(%s,%s,%s,%s,%s)", (nomePag,cpfDigitado,codBarras,value,situacao))
+                dateNow = datetime.today().strftime('%Y-%m-%d')
+                # @@ pegando a foreign key e adicionando em outra tabela
+                bd.cursor.execute("SELECT userID FROM usuarios WHERE cpf=%s",(cpfDigitado,))
+                userID = bd.cursor.fetchall()[0]
+                bd.cursor.execute("INSERT INTO pagamentos(userID,nomePag,cpf,codBarras,valor,dataPag,situacao) VALUES(%s,%s,%s,%s,%s,%s,%s)", (userID,nomePag,cpfDigitado,codBarras,value,dateNow,situacao))
                 bd.connection.commit()
                 load = 0
                 seg = 59
@@ -284,7 +295,7 @@ def pagamentos(cpfDigitado):
         cont=0
         for dados in rows:
             cont+=1
-            print("{} ->   NOME: {}  CÓD.BARRAS:{}  VALOR: R${}  SITUAÇÃO: {}".format(cont,dados[2],dados[4],dados[5],dados[6]))
+            print("{} ->   NOME: {}    CÓD.BARRAS: {}    VALOR: R${}    DATA: {}    SITUAÇÃO: {}".format(cont,dados[2],dados[4],dados[5],dados[6],dados[7]))
         print("\n/voltar")
     else:
         print("\nNenhum pagamento foi efetuado")

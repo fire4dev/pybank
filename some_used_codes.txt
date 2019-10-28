@@ -29,7 +29,8 @@ CREATE TABLE transferencias(
     userID integer REFERENCES usuarios(userID),
     cpf varchar(20) not null,
     cpfTransf varchar(20) not null,
-    valor bigint not null
+    valor bigint not null,
+    dataTransf date not null
 );
 
 CREATE TABLE pagamentos(
@@ -39,5 +40,6 @@ CREATE TABLE pagamentos(
     cpf varchar(20) not null,
     codBarras varchar(30) not null,
     valor bigint not null,
+    dataPag date not null,
     situacao varchar(20) not null
 );
