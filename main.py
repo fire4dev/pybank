@@ -232,8 +232,6 @@ def transferir(cpfDigitado):
             print("\n/voltar")
             commands = input("\n\nInforme algum comando aqui -> ")
             exitBank(commands)
-            if commands == "/voltar":
-                exit()
             
     
 
@@ -293,8 +291,6 @@ def pagar(cpfDigitado):
             print("\n/voltar")
             commands = input("\n\nInforme algum comando aqui -> ")
             exitBank(commands)
-            if commands == "/voltar":
-                exit()
 
 def pagamentos(cpfDigitado):
     bd.cursor.execute("SELECT * FROM pagamentos WHERE cpf=%s",(cpfDigitado,))
