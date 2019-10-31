@@ -111,6 +111,25 @@ def entrar():
                     print("\nVocê foi desconectado!")
                     time.sleep(2.5)
                     logado = 0
+                if commands == "/apagarconta":
+                    clear()
+                    clear()
+                    designBank()
+                    print("\n Tem certeza que deseja apagar a sua conta do PyBank?")
+                    print("[sim - nao] ->  ")
+                    commands = input("\n\nInforme algum comando aqui -> ")
+                    exitBank(commands)
+                    if commands == "/voltar":
+                        continue
+                    if commands=="sim":
+                        delAcc(cpf)
+                    elif commands=="nao":
+                        continue
+                    else:
+                        print("\n Comando incorreto :(")
+                        continue
+                    time.sleep(2.5)
+                    logado = 0
                 if commands == "/minhaconta":
                     clear()
                     designBank()
@@ -157,6 +176,42 @@ def entrar():
             time.sleep(2.5)
             concluido = 1
 
+def delAcc(cpfDigitado):
+    # @@ verificar se usuario existe, e se existir irá excluir
+    bd.cursor.execute("SELECT cpf FROM pagamentos WHERE cpf=%s",(cpfDigitado,))
+    row = bd.cursor.rowcount
+    if row>0:
+        # @@ deletar conta em pagamentos
+        bd.cursor.execute("DELETE FROM pagamentos WHERE cpf=%s",(cpfDigitado,))
+
+    # @@ verificar se usuario existe, e se existir irá excluir
+    bd.cursor.execute("SELECT cpf FROM transferencias WHERE cpf=%s",(cpfDigitado,))
+    row = bd.cursor.rowcount
+    if row>0:
+        # @@ deletar conta em transferencias
+        bd.cursor.execute("DELETE FROM transferencias WHERE cpf=%s",(cpfDigitado,))
+    # @@ deletar conta em usuários
+    bd.cursor.execute("DELETE FROM usuarios WHERE cpf=%s",(cpfDigitado,))
+    load=0
+    while load<=30:
+        clear()
+        designBank()
+        print("\n Excluindo conta",end='')
+        print(".",end='')
+        time.sleep(1)
+        load+=1
+    # @@ excluida com sucesso, e saindo
+    print("\n Conta deletada com sucesso!")
+    load=0
+    while load<=5:
+        clear()
+        designBank()
+        print("saindo",end='')
+        print(".",end='')
+        time.sleep(1)
+        load+=1
+    exit()
+
 def userLogado(cpfDigitado):
     # @@ pegar o nome no bd
     bd.cursor.execute("SELECT fullname FROM usuarios WHERE cpf=%s;",(cpfDigitado,))
@@ -167,7 +222,8 @@ def userLogado(cpfDigitado):
     print("/transferir")
     print("/pagar")
     print("/pagamentos")
-    print("\n/sairconta")
+    print("\n/apagarconta")
+    print("/sairconta")
     print("/sair")
 
 def myacc(cpfDigitado):
