@@ -202,14 +202,6 @@ def delAcc(cpfDigitado):
         load+=1
     # @@ excluida com sucesso, e saindo
     print("\n Conta deletada com sucesso!")
-    load=0
-    while load<=5:
-        clear()
-        designBank()
-        print("saindo",end='')
-        print(".",end='')
-        time.sleep(1)
-        load+=1
     exit()
 
 def userLogado(cpfDigitado):
@@ -407,6 +399,7 @@ def deposit():
 
 
 # @@@@@  MAIN  @@@@@
+clear()
 designBank()
 noRobot = 0
 noRobot = random.randint(1000, 9999)
